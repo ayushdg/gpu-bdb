@@ -11,7 +11,6 @@ from prefect.engine.executors import DaskExecutor
 from distributed import Client, worker_client
 
 dask_qnums = [str(i).zfill(2) for i in range(1, 31)]
-dask_qnums.remove("28")
 
 
 def get_run_args(config_file):
@@ -118,11 +117,12 @@ if __name__ == "__main__":
             run_query(config=config, client=client, query_func=dask_queries.get(qnum))
             return time.time() - t1
 
+        os.chdir(base_path)
+
     if __name__ == "__main__":
+        executor = DaskExecutor(address=os.environ["Scheduler_address"])
         environment = LocalEnvironment(
-            executor=DaskExecutor(
-                address="tcp://172.22.1.26:8786",
-            )
+            executor=executor,
         )
 
         curr_path = os.getcwd()
@@ -148,3 +148,4 @@ if __name__ == "__main__":
 
                 results.append(res)
         tpcx_bb_flow.register(project_name="tpcx-bb_prefect")
+        #tpcx_bb_flow.run(executor=executor)
