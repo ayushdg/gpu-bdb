@@ -1,0 +1,5 @@
+# Place in ~/.prefect/ or location pointed by PREFECT__USER_CONFIG_PATH if set explicitly
+
+[server]
+  [server.ui]
+    apollo_url="http://{node-ip}:4200/graphql"

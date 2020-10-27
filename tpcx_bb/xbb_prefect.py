@@ -147,5 +147,5 @@ if __name__ == "__main__":
                     res.set_upstream(results[-1])
 
                 results.append(res)
-        tpcx_bb_flow.register(project_name="tpcx-bb_prefect")
+        tpcx_bb_flow.register(project_name="Tpcx-bb-rapids")
         #tpcx_bb_flow.run(executor=executor)
