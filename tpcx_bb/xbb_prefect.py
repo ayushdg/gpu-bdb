@@ -119,33 +119,34 @@ if __name__ == "__main__":
 
         os.chdir(base_path)
 
-    if __name__ == "__main__":
-        executor = DaskExecutor(address=os.environ["Scheduler_address"])
-        environment = LocalEnvironment(
-            executor=executor,
+
+    executor = DaskExecutor(address=os.environ["Scheduler_address"])
+    environment = LocalEnvironment(
+        executor=executor,
+    )
+
+    curr_path = os.getcwd()
+    os.chdir(curr_path)
+
+    with Flow("TPCx-BB Flow", environment=environment) as tpcx_bb_flow:
+        config_file_path = Parameter(
+            name="config_file", default="benchmark_runner/benchmark_config.yaml"
         )
 
-        curr_path = os.getcwd()
-        os.chdir(curr_path)
-        with Flow("TPCx-BB Flow", environment=environment) as tpcx_bb_flow:
-            config_file_path = Parameter(
-                name="config_file", default="benchmark_runner/benchmark_config.yaml"
+        qpep_res = query_prep(config_file_path)
+        config = qpep_res["config"]
+        results = []
+        for q in dask_qnums:
+            res = run_prefect_query(
+                config=config,
+                qnum=q,
+                base_path=curr_path,
+                task_args=dict(name=f"Query_{q}"),
             )
 
-            qpep_res = query_prep(config_file_path)
-            config = qpep_res["config"]
-            results = []
-            for q in dask_qnums:
-                res = run_prefect_query(
-                    config=config,
-                    qnum=q,
-                    base_path=curr_path,
-                    task_args=dict(name=f"Query_{q}"),
-                )
+            if len(results) > 0:
+                res.set_upstream(results[-1])
 
-                if len(results) > 0:
-                    res.set_upstream(results[-1])
-
-                results.append(res)
-        tpcx_bb_flow.register(project_name="Tpcx-bb-rapids")
-        #tpcx_bb_flow.run(executor=executor)
+            results.append(res)
+    tpcx_bb_flow.register(project_name="Tpcx-bb-rapids")
+    #tpcx_bb_flow.run(executor=executor)
